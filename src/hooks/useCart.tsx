@@ -50,9 +50,16 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   const removeProduct = (productId: number) => {
     try {
-      // TODO
-    } catch {
-      // TODO
+      const productIndex = cart.findIndex(p => p.id === productId);
+      if (productIndex > -1) {
+        setCart(cart.slice(0, productIndex).concat(cart.slice(productIndex + 1)));
+      } else {
+        throw new Error("Este produto não se encontra mais no carrinho");
+      }
+    } catch(e) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      }
     }
   };
 
@@ -62,7 +69,8 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   }: UpdateProductAmount) => {
     let stock: Stock;
     try {
-      if (amount < 1) {
+      console.log(amount);
+      if (amount > 1) {
         [stock] = (await api.get("stock", { params: { id: productId } }))?.data;
         if (stock.amount >= amount) {
           setCart(cart.map(p => {
@@ -73,7 +81,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
           throw new Error("Não há mais itens em estoque para este produto");
         }
       } else {
-        throw new Error("Erro ao atualizar quantidade");
+        throw new Error("Erro ao atualizar a quantidade");
       }
     } catch (e) {
       if (e instanceof Error) {
