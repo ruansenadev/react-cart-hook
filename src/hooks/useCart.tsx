@@ -23,14 +23,19 @@ const CartContext = createContext<CartContextData>({} as CartContextData);
 
 export function CartProvider({ children }: CartProviderProps): JSX.Element {
   const [cart, setCart] = useState<Product[]>(() => {
-    // const storagedCart = Buscar dados do localStorage
+    const storagedCart = localStorage.getItem("@RocketShoes:cart");
 
-    // if (storagedCart) {
-    //   return JSON.parse(storagedCart);
-    // }
+    if (storagedCart) {
+      return JSON.parse(storagedCart);
+    }
 
     return [];
   });
+
+  function setCartWithLocal(cart: Product[]) {
+    setCart(cart);
+    localStorage.setItem("@RocketShoes:cart", JSON.stringify(cart));
+  }
 
   const addProduct = async (productId: number) => {
     let product: Product, productIndex: number;
@@ -39,7 +44,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       productIndex = cart.findIndex(p => p.id === product.id);
       if (productIndex === -1) {
         product.amount = 1;
-        setCart([...cart, product]);
+        setCartWithLocal([...cart, product]);
       } else {
         updateProductAmount({ productId: cart[productIndex].id, amount: cart[productIndex].amount + 1 })
       }
@@ -52,7 +57,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     try {
       const productIndex = cart.findIndex(p => p.id === productId);
       if (productIndex > -1) {
-        setCart(cart.slice(0, productIndex).concat(cart.slice(productIndex + 1)));
+        setCartWithLocal(cart.slice(0, productIndex).concat(cart.slice(productIndex + 1)));
       } else {
         throw new Error("Este produto não se encontra mais no carrinho");
       }
@@ -72,7 +77,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       if (amount >= 1) {
         [stock] = (await api.get("stock", { params: { id: productId } }))?.data;
         if (stock.amount >= amount) {
-          setCart(cart.map(p => {
+          setCartWithLocal(cart.map(p => {
             if (p.id === productId) { p.amount = amount; }
             return p;
           }));
