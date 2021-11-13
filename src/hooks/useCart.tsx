@@ -33,10 +33,15 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   });
 
   const addProduct = async (productId: number) => {
+    let product: Product;
     try {
-      // TODO
+      [product] = (await api.get("products", { params: { id: productId } }))?.data;
+      if (cart.findIndex(p => p.id === product.id) === -1) {
+        product.amount = 1;
+        setCart([...cart, product]);
+      }
     } catch {
-      // TODO
+      toast.error("O produto não se encontra mais disponível");
     }
   };
 
