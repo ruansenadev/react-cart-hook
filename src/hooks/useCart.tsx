@@ -69,8 +69,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   }: UpdateProductAmount) => {
     let stock: Stock;
     try {
-      console.log(amount);
-      if (amount > 1) {
+      if (amount >= 1) {
         [stock] = (await api.get("stock", { params: { id: productId } }))?.data;
         if (stock.amount >= amount) {
           setCart(cart.map(p => {
