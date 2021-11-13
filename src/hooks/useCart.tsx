@@ -33,12 +33,15 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   });
 
   const addProduct = async (productId: number) => {
-    let product: Product;
+    let product: Product, productIndex: number;
     try {
       [product] = (await api.get("products", { params: { id: productId } }))?.data;
-      if (cart.findIndex(p => p.id === product.id) === -1) {
+      productIndex = cart.findIndex(p => p.id === product.id);
+      if (productIndex === -1) {
         product.amount = 1;
         setCart([...cart, product]);
+      } else {
+        updateProductAmount({ productId: cart[productIndex].id, amount: cart[productIndex].amount + 1 })
       }
     } catch {
       toast.error("O produto não se encontra mais disponível");
@@ -57,10 +60,25 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     productId,
     amount,
   }: UpdateProductAmount) => {
+    let stock: Stock;
     try {
-      // TODO
-    } catch {
-      // TODO
+      if (amount < 1) {
+        [stock] = (await api.get("stock", { params: { id: productId } }))?.data;
+        if (stock.amount >= amount) {
+          setCart(cart.map(p => {
+            if (p.id === productId) { p.amount = amount; }
+            return p;
+          }));
+        } else {
+          throw new Error("Não há mais itens em estoque para este produto");
+        }
+      } else {
+        throw new Error("Erro ao atualizar quantidade");
+      }
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      }
     }
   };
 
